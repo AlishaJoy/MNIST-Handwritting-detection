@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMNIST Handwriting Recognition</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Floating Numbers Background -->
+    <div class="floating-numbers">
+        <div class="number">01</div>
+        <div class="number">10</div>
+        <div class="number">11</div>
+        <div class="number">00</div>
+        <div class="number">101</div>
+        <div class="number">110</div>
+        <div class="number">001</div>
+        <div class="number">111</div>
+        <div class="number">010</div>
+        <div class="number">100</div>
+        <div class="number">AI</div>
+        <div class="number">ML</div>
+        <div class="number">CNN</div>
+        <div class="number">OCR</div>
+        <div class="number">123</div>
+    </div>
+
+    <div class="container">
+        <h1>✨ EMNIST Handwriting Recognition</h1>
+        <p style="color: #666; margin-bottom: 30px; font-size: 1.1rem;">
+            Upload your handwritten text and let AI recognize it instantly
+        </p>
+        
+        <form method="POST" enctype="multipart/form-data">
+            <div class="file-upload-wrapper">
+                <input type="file" name="image" accept="image/*" required id="fileInput">
+                <label for="fileInput" class="file-upload-label">
+                    📁 Choose Image File
+                    <span class="file-upload-text">Drag & drop or click to select</span>
+                </label>
+            </div>
+            <button type="submit" id="submitBtn">
+                <span class="btn-text">🚀 Upload & Predict</span>
+                <div class="loading" style="display: none;"></div>
+            </button>
+        </form>
+        
+        {% if result %}
+            <div class="result">
+                <h2>🎯 Recognized Text:</h2>
+                <div class="result-text">{{ result }}</div>
+            </div>
+        {% endif %}
+        
+        {% if img_data %}
+            <div class="preview">
+                <h2>🖼️ Annotated Image:</h2>
+                <div class="image-container">
+                    <img src="data:image/png;base64,{{ img_data }}" alt="Recognition Result" loading="lazy">
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Enhanced file input functionality
+        const fileInput = document.getElementById('fileInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const loading = submitBtn.querySelector('.loading');
+
+        fileInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                const label = document.querySelector('.file-upload-label .file-upload-text');
+                label.textContent = `Selected: ${fileName}`;
+            }
+        });
+
+        // Loading state on form submit
+        document.querySelector('form').addEventListener('submit', function() {
+            btnText.style.display = 'none';
+            loading.style.display = 'inline-block';
+            submitBtn.disabled = true;
+        });
+
+        // Drag and drop functionality
+        const container = document.querySelector('.container');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            container.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            container.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            container.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            container.classList.add('drag-over');
+        }
+
+        function unhighlight(e) {
+            container.classList.remove('drag-over');
+        }
+
+        container.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                const event = new Event('change', { bubbles: true });
+                fileInput.dispatchEvent(event);
+            }
+        }
+    </script>
+
+    <style>
+        /* Additional styles for enhanced functionality */
+        .file-upload-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 25px;
+            border: 2px dashed #ff8a95;
+            border-radius: 12px;
+            background: rgba(255, 138, 149, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e91e63;
+        }
+
+        .file-upload-label:hover {
+            border-color: #e91e63;
+            background: rgba(233, 30, 99, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(233, 30, 99, 0.2);
+        }
+
+        .file-upload-text {
+            display: block;
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+            font-weight: normal;
+        }
+
+        #fileInput {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .result-text {
+            background: linear-gradient(135deg, #e91e63, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.3rem;
+            font-weight: 600;
+            padding: 15px;
+            border-left: 4px solid #e91e63;
+            margin-top: 10px;
+        }
+
+        .image-container {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .drag-over {
+            transform: scale(1.02);
+            box-shadow: 0 25px 50px rgba(233, 30, 99, 0.3);
+        }
+
+        .drag-over .file-upload-label {
+            border-color: #e91e63;
+            background: rgba(233, 30, 99, 0.2);
+        }
+    </style>
+</body>
+</html>
